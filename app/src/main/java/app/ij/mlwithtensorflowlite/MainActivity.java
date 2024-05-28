@@ -33,12 +33,14 @@ import java.nio.ByteOrder;
 import app.ij.mlwithtensorflowlite.ml.Model;
 
 
-public class MainActivity extends AppCompatActivity {
+public class  MainActivity extends AppCompatActivity {
 
     Button camera, gallery;
     ImageView imageView;
     TextView result;
     int imageSize = 224;
+    String className;
+    float probability;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +52,13 @@ public class MainActivity extends AppCompatActivity {
 
         result = findViewById(R.id.result);
         imageView = findViewById(R.id.imageView);
+        result.setText("Добро пожаловать в приложение Skin Cancer." +
+                "Загрузите фотографию участка кожи, который хотите проверить.");
 
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(cameraIntent, 3);
@@ -70,10 +75,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+public void infoClick(View view)
+{
+    Intent infoIntent = new Intent(MainActivity.this, InfoActivity2.class);
+    infoIntent.putExtra("CLASS",className);
+    infoIntent.putExtra("PROB",Float.toString(probability));
+    startActivity(infoIntent);
+}
 
     public void classifyImage(Bitmap image){
         try {
             Model model = Model.newInstance(getApplicationContext());
+            result.setText("");
 
             // Creates inputs for reference.
             TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1,224, 224, 3}, DataType.FLOAT32);
@@ -110,10 +123,13 @@ public class MainActivity extends AppCompatActivity {
                     maxPos = i;
                 }
             }
-            String[] classes = {"Актинический кератоз ", "Базалиома", "Доброкачественный кератоз", "Дерматофиброма", "Меланома","Меланоцитарный невус", "Сосудистые повреждения"};
-            result.setText(classes[maxPos]);
-            result.append(": ");
-            result.append(Float.toString(maxConfidence*100));
+            String[] classes = {"Актинический кератоз", "Базалиома", "Доброкачественный кератоз", "Дерматофиброма", "Меланома","Меланоцитарный невус", "Сосудистые повреждения"};
+            className =classes[maxPos];
+            result.append("Распознано:");
+            result.append(className);
+            result.append("\n"+"Вероятность"+": ");
+            probability=maxConfidence*100;
+            result.append(Float.toString(probability));
             result.append("%");
           //  result.setText(confidences.toString());
 
